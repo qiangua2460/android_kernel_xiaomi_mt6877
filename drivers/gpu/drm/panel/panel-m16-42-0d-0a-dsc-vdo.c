@@ -233,9 +233,9 @@ static void mi_disp_panel_ddic_send_cmd(struct LCM_setting_table *table, unsigne
 		cmd_msg.type[i] = table[i].count > 2 ? 0x39 : 0x15;
 		cmd_msg.tx_buf[i] = table[i].para_list;
 		cmd_msg.tx_len[i] = table[i].count;
-		pr_debug("cmd count:%d, cmd_add:%x len:%d\n",count,table[i].cmd,table[i].count);
+		pr_info("cmd count:%d, cmd_add:%x len:%d\n",count,table[i].cmd,table[i].count);
 		for (j = 0;j < table[i].count; j++)
-			pr_debug("0x%02hhx ",table[i].para_list[j]);
+			pr_info("0x%02hhx ",table[i].para_list[j]);
 	}
 
 	ret = mtk_ddic_dsi_send_cmd(&cmd_msg, true, false);
@@ -299,7 +299,7 @@ static int lcm_panel_vibr30_disable(struct device *dev)
 	int status = 0;
 
 	status = regulator_is_enabled(disp_vibr30);
-	pr_debug("%s regulator_is_enabled = %d\n", __func__, status);
+	pr_info("%s regulator_is_enabled = %d\n", __func__, status);
 	if (status){
 		ret = regulator_disable(disp_vibr30);
 		if (ret < 0)
@@ -440,7 +440,7 @@ static void push_table(struct lcm *ctx, struct LCM_setting_table *table, unsigne
 
 static void lcm_panel_init(struct lcm *ctx)
 {
-	pr_debug("%s+\n", __func__);
+	pr_info("%s+\n", __func__);
 	ctx->reset_gpio =
 		devm_gpiod_get(ctx->dev, "reset", GPIOD_OUT_LOW);
 	if (IS_ERR(ctx->reset_gpio)) {
@@ -457,7 +457,7 @@ static void lcm_panel_init(struct lcm *ctx)
 	usleep_range(18 * 1000, (18 * 1000)+20);
 	devm_gpiod_put(ctx->dev, ctx->reset_gpio);
 
-	pr_debug("%s: dynamic_fps:%d, gir_status:%d, crc_status:%d\n", __func__,
+	pr_info("%s: dynamic_fps:%d, gir_status:%d, crc_status:%d\n", __func__,
 		ctx->dynamic_fps, ctx->gir_status, ctx->crc_status);
 
 	mutex_lock(&ctx->panel_lock);
@@ -465,46 +465,46 @@ static void lcm_panel_init(struct lcm *ctx)
 		if (init_setting_vdo[FPS_INIT_INDEX].cmd == 0x6C)
 			init_setting_vdo[FPS_INIT_INDEX].para_list[0] = 0x02;
 		else
-			pr_debug("%s: please check FPS_INIT_INDEX\n", __func__);
+			pr_info("%s: please check FPS_INIT_INDEX\n", __func__);
 	} else if (ctx->dynamic_fps == 90) {
 		if (init_setting_vdo[FPS_INIT_INDEX].cmd == 0x6C)
 			init_setting_vdo[FPS_INIT_INDEX].para_list[0] = 0x01;
 		else
-			pr_debug("%s: please check FPS_INIT_INDEX\n", __func__);
+			pr_info("%s: please check FPS_INIT_INDEX\n", __func__);
 	} else if (ctx->dynamic_fps == 60 || ctx->dynamic_fps == 30) {
 		if (init_setting_vdo[FPS_INIT_INDEX].cmd == 0x6C)
 			init_setting_vdo[FPS_INIT_INDEX].para_list[0] = 0x00;
 		else
-			pr_debug("%s: please check FPS_INIT_INDEX\n", __func__);
+			pr_info("%s: please check FPS_INIT_INDEX\n", __func__);
 	}
 
 	if (ctx->gir_status == 1) {
 		if (init_setting_vdo[GIR_INIT_INDEX1].cmd == 0xD5)
 				init_setting_vdo[GIR_INIT_INDEX1].para_list[0] = 0x71;
 		else
-			pr_debug("%s: please check GIR_INIT_INDEX1\n", __func__);
+			pr_info("%s: please check GIR_INIT_INDEX1\n", __func__);
 	} else {
 		if (init_setting_vdo[GIR_INIT_INDEX1].cmd == 0xD5)
 				init_setting_vdo[GIR_INIT_INDEX1].para_list[0] = 0x70;
 		else
-			pr_debug("%s: please check GIR_INIT_INDEX1\n", __func__);
+			pr_info("%s: please check GIR_INIT_INDEX1\n", __func__);
 	}
 
 	if (ctx->crc_status == 1) {
 		if (init_setting_vdo[GIR_CRC_INDEX].cmd == 0x55)
 				init_setting_vdo[GIR_CRC_INDEX].para_list[0] = 0x10;
 		else
-			pr_debug("%s: please check GIR_CRC_INDEX\n", __func__);
+			pr_info("%s: please check GIR_CRC_INDEX\n", __func__);
 	} else {
 		if (init_setting_vdo[GIR_CRC_INDEX].cmd == 0x55)
 				init_setting_vdo[GIR_CRC_INDEX].para_list[0] = 0x00;
 		else
-			pr_debug("%s: please check GIR_CRC_INDEX\n", __func__);
+			pr_info("%s: please check GIR_CRC_INDEX\n", __func__);
 	}
 	push_table(ctx, init_setting_vdo, sizeof(init_setting_vdo) / sizeof(struct LCM_setting_table));
 	mutex_unlock(&ctx->panel_lock);
 
-	pr_debug("%s-\n", __func__);
+	pr_info("%s-\n", __func__);
 }
 
 static int lcm_disable(struct drm_panel *panel)
@@ -583,7 +583,7 @@ static int lcm_prepare(struct drm_panel *panel)
 	struct lcm *ctx = panel_to_lcm(panel);
 	int ret;
 
-	pr_debug("%s\n", __func__);
+	pr_info("%s\n", __func__);
 	if (ctx->prepared)
 		return 0;
 
@@ -712,7 +712,7 @@ static int lcm_setbacklight_cmdq(void *dsi, dcs_write_gce cb, void *handle,
 	if (!cb)
 		return -1;
 
-	pr_debug("%s: last_bl_level = %d,level = %d\n", __func__, last_bl_level, level);
+	pr_info("%s: last_bl_level = %d,level = %d\n", __func__, last_bl_level, level);
 
 	mutex_lock(&ctx->panel_lock);
 	cb(dsi, handle, bl_tb0, ARRAY_SIZE(bl_tb0));
@@ -729,8 +729,10 @@ static int lcm_setbacklight_cmdq(void *dsi, dcs_write_gce cb, void *handle,
 
 	if (last_bl_level == 0 && level > 0) {
 #ifdef CONFIG_MI_DISP
+#ifndef CONFIG_FACTORY_BUILD
 		if (!get_panel_dead_flag() && ctx->doze_state == 0)
 			mi_dsi_panel_tigger_dimming_work(dsi);
+#endif
 #endif
 	}
 
@@ -757,7 +759,7 @@ static unsigned long panel_doze_get_mode_flags(struct drm_panel *panel,
 {
 	unsigned long mode_flags;
 
-	pr_debug("%s + \n", __func__);
+	pr_info("%s + \n", __func__);
 
 	if (doze_en) {
 		mode_flags = MIPI_DSI_MODE_LPM
@@ -798,7 +800,7 @@ static int panel_doze_enable(struct drm_panel *panel,
 	struct lcm *ctx = panel_to_lcm(panel);
 	unsigned int i = 0;
 
-	pr_debug("%s + \n", __func__);
+	pr_info("%s + \n", __func__);
 
 	mutex_lock(&ctx->panel_lock);
 	for (i = 0; i < (sizeof(lcm_normal_to_aod) /
@@ -830,7 +832,7 @@ static int panel_doze_enable_start(struct drm_panel *panel,
 {
 	struct lcm *ctx = panel_to_lcm(panel);
 	int cmd = 0x28;
-	pr_debug("%s + \n", __func__);
+	pr_info("%s + \n", __func__);
 
 	mutex_lock(&ctx->panel_lock);
 	ctx->doze_state = 1;
@@ -856,7 +858,7 @@ static int panel_doze_disable(struct drm_panel *panel,
 	unsigned int i = 0;
 
 	mutex_lock(&ctx->panel_lock);
-	pr_debug("%s: ctx->dynamic_fps = %d\n", __func__, ctx->dynamic_fps);
+	pr_info("%s: ctx->dynamic_fps = %d\n", __func__, ctx->dynamic_fps);
 	if (ctx->dynamic_fps == 120) {
 		if (lcm_aod_to_normal[AOD_TO_NORMAL_FPS_INDEX].cmd == 0x6C)
 			lcm_aod_to_normal[AOD_TO_NORMAL_FPS_INDEX].para_list[1] = 0x02;
@@ -899,7 +901,7 @@ static int panel_doze_disable(struct drm_panel *panel,
 static int panel_doze_post_disp_on(struct drm_panel *panel,
 		void *dsi, dcs_write_gce cb, void *handle)
 {
-	pr_debug("%s + \n", __func__);
+	pr_info("%s + \n", __func__);
 
 /*
 	struct lcm *ctx = panel_to_lcm(panel);
@@ -931,7 +933,7 @@ static int panel_set_aod_light_mode(void *dsi,
 	struct lcm *ctx = panel_to_lcm(this_panel);
 	int i = 0;
 
-	pr_debug("debug for lcm %s\n", __func__);
+	pr_info("debug for lcm %s\n", __func__);
 
 	mutex_lock(&ctx->panel_lock);
 	if (mode == DOZE_BRIGHTNESS_HBM) {
@@ -942,7 +944,7 @@ static int panel_set_aod_light_mode(void *dsi,
 			cb(dsi, handle, lcm_aod_low_mode[i].para_list, lcm_aod_low_mode[i].count);
 	}
 	mutex_unlock(&ctx->panel_lock);
-	pr_debug("%s : %d !\n", __func__, mode);
+	pr_info("%s : %d !\n", __func__, mode);
 
 	return 0;
 }
@@ -963,7 +965,7 @@ static int panel_set_doze_brightness(struct drm_panel *panel, int doze_brightnes
 	ctx = panel_to_lcm(panel);
 
 	if (ctx->doze_brightness_state == doze_brightness) {
-		pr_debug("%s skip same doze_brightness set:%d\n", __func__, doze_brightness);
+		pr_info("%s skip same doze_brightness set:%d\n", __func__, doze_brightness);
 		return 0;
 	}
 
@@ -983,7 +985,7 @@ static int panel_set_doze_brightness(struct drm_panel *panel, int doze_brightnes
 	}
 
 	ctx->doze_brightness_state = doze_brightness;
-	pr_debug("%s set doze_brightness %d end -\n", __func__, doze_brightness);
+	pr_info("%s set doze_brightness %d end -\n", __func__, doze_brightness);
 	return ret;
 }
 
@@ -998,7 +1000,7 @@ static int panel_get_doze_brightness(struct drm_panel *panel, u32 *doze_brightne
 	}
 
 	*doze_brightness = ctx->doze_brightness_state;
-	pr_debug("%s get doze_brightness %d end -\n", __func__, *doze_brightness);
+	pr_info("%s get doze_brightness %d end -\n", __func__, *doze_brightness);
 	return count;
 }
 #endif
@@ -1020,10 +1022,12 @@ static int panel_set_doze_brightness(struct drm_panel *panel, int doze_brightnes
 
 	ctx = panel_to_lcm(panel);
 
+#ifndef CONFIG_FACTORY_BUILD
 	if (ctx->doze_brightness_state == doze_brightness) {
-		pr_debug("%s skip same doze_brightness set:%d\n", __func__, doze_brightness);
+		pr_info("%s skip same doze_brightness set:%d\n", __func__, doze_brightness);
 		return 0;
 	}
+#endif
 
 	if (DOZE_BRIGHTNESS_LBM  == doze_brightness || DOZE_BRIGHTNESS_HBM  == doze_brightness) {
 		if (cmd_msg != NULL) {
@@ -1056,7 +1060,7 @@ static int panel_set_doze_brightness(struct drm_panel *panel, int doze_brightnes
 	}
 
 	ctx->doze_brightness_state = doze_brightness;
-	pr_debug("%s set doze_brightness %d end -\n", __func__, doze_brightness);
+	pr_info("%s set doze_brightness %d end -\n", __func__, doze_brightness);
 
 	return ret;
 }
@@ -1072,14 +1076,13 @@ static int panel_get_doze_brightness(struct drm_panel *panel, u32 *doze_brightne
 	}
 
 	*doze_brightness = ctx->doze_brightness_state;
-	pr_debug("%s get doze_brightness %d end -\n", __func__, *doze_brightness);
+	pr_info("%s get doze_brightness %d end -\n", __func__, *doze_brightness);
 	return count;
 
 }
 #endif
 #endif
 
-#ifdef ENABLE_30HZ
 static struct drm_display_mode mode_30hz = {
 	.clock = 186486,
 	.hdisplay = 1080,
@@ -1092,7 +1095,6 @@ static struct drm_display_mode mode_30hz = {
 	.vtotal = 2400 + 20 + 4 + 8,	//VBP
 	.vrefresh = 30,
 };
-#endif
 
 static struct drm_display_mode mode_60hz = {
 	.clock = 328029,
@@ -1133,7 +1135,6 @@ static struct drm_display_mode mode_120hz = {
 	.vrefresh = 120,
 };
 
-#ifdef ENABLE_30HZ
 static struct mtk_panel_params ext_params_30hz = {
 	.lcm_index = 0,
 	.pll_clk = DATA_RATE / 2,
@@ -1203,7 +1204,7 @@ static struct mtk_panel_params ext_params_30hz = {
 	.physical_width_um = PHYSICAL_WIDTH,
 	.physical_height_um = PHYSICAL_HEIGHT,
 };
-#endif
+
 
 static struct mtk_panel_params ext_params_60hz = {
 	.lcm_index = 0,
@@ -1436,16 +1437,12 @@ static int mtk_panel_ext_param_set(struct drm_panel *panel, unsigned int mode)
 	struct drm_display_mode *m = get_mode_by_id(panel->connector, mode);
 	struct lcm *ctx = panel_to_lcm(panel);
 
-	//pr_debug("%s drm_mode_vrefresh = %d, m->hdisplay = %d\n",
+	//pr_info("%s drm_mode_vrefresh = %d, m->hdisplay = %d\n",
 		//__func__, drm_mode_vrefresh(m), m->hdisplay);
 
-#ifdef ENABLE_30HZ
 	if (drm_mode_vrefresh(m) == 30)
 		ext->params = &ext_params_30hz;
 	else if (drm_mode_vrefresh(m) == 60)
-#else
-	if (drm_mode_vrefresh(m) == 60)
-#endif
 		ext->params = &ext_params_60hz;
 	else if (drm_mode_vrefresh(m) == 90)
 		ext->params = &ext_params_90hz;
@@ -1463,7 +1460,7 @@ static void mode_switch_to_60(struct drm_panel *panel)
 {
 	struct lcm *ctx = panel_to_lcm(panel);
 
-	pr_debug("%s\n", __func__);
+	pr_info("%s\n", __func__);
 
 	mutex_lock(&ctx->panel_lock);
 	lcm_dcs_write_seq_static(ctx, 0x6C, 0x00);
@@ -1474,7 +1471,7 @@ static void mode_switch_to_90(struct drm_panel *panel)
 {
 	struct lcm *ctx = panel_to_lcm(panel);
 
-	pr_debug("%s\n", __func__);
+	pr_info("%s\n", __func__);
 
 	mutex_lock(&ctx->panel_lock);
 	lcm_dcs_write_seq_static(ctx, 0x6C, 0x01);
@@ -1485,7 +1482,7 @@ static void mode_switch_to_120(struct drm_panel *panel)
 {
 	struct lcm *ctx = panel_to_lcm(panel);
 
-	pr_debug("%s\n", __func__);
+	pr_info("%s\n", __func__);
 
 	mutex_lock(&ctx->panel_lock);
 	lcm_dcs_write_seq_static(ctx, 0x6C, 0x02);
@@ -1499,7 +1496,7 @@ static int mode_switch(struct drm_panel *panel, unsigned int cur_mode,
 	struct drm_display_mode *m = get_mode_by_id(panel->connector, dst_mode);
 	struct lcm *ctx = panel_to_lcm(panel);
 
-	pr_debug("%s cur_mode = %d dst_mode %d\n", __func__, cur_mode, dst_mode);
+	pr_info("%s cur_mode = %d dst_mode %d\n", __func__, cur_mode, dst_mode);
 
 	if (drm_mode_vrefresh(m) == 60) {
 		mode_switch_to_60(panel);
@@ -1581,7 +1578,7 @@ static int panel_get_wp_info(struct drm_panel *panel, char *buf, size_t size)
 {
 	int count = 0;
 
-	pr_debug("%s: got wp info from cmdline: oled_wp_cmdline=%s\n",
+	pr_info("%s: got wp info from cmdline: oled_wp_cmdline=%s\n",
 		__func__, oled_wp_cmdline);
 	count = snprintf(buf, PAGE_SIZE, "%s\n", oled_wp_cmdline);
 
@@ -1612,14 +1609,16 @@ static void lcm_esd_restore_backlight(struct mtk_dsi *dsi, struct drm_panel *pan
 	bl_tb0[1] = (last_non_zero_bl_level >> 8) & 0xFF;
 	bl_tb0[2] = last_non_zero_bl_level & 0xFF;
 
-	pr_debug("%s: restore to level = %d\n", __func__, last_non_zero_bl_level);
+	pr_info("%s: restore to level = %d\n", __func__, last_non_zero_bl_level);
 
 	mutex_lock(&ctx->panel_lock);
 	lcm_dcs_write(ctx, bl_tb0, ARRAY_SIZE(bl_tb0));
 	mutex_unlock(&ctx->panel_lock);
 
 #ifdef CONFIG_MI_DISP
+#ifndef CONFIG_FACTORY_BUILD
 	mi_dsi_panel_tigger_dimming_work(dsi);
+#endif
 #endif
 
 	return;
@@ -1671,7 +1670,7 @@ static void panel_elvss_control(struct drm_panel *panel, bool en)
 		return;
 	}
 	if (last_bl_level == 0) {
-		pr_debug("last bl level is 0, skip set dimming %s\n", __func__, en ? "on" : "off");
+		pr_info("last bl level is 0, skip set dimming %s\n", __func__, en ? "on" : "off");
 		return;
 	}
 	ctx = panel_to_lcm(panel);
@@ -1702,7 +1701,7 @@ static int panel_set_gir_on(struct drm_panel *panel)
 	struct lcm *ctx;
 	int ret = 0;
 
-	pr_debug("%s: + ctx->gir_status = %d  \n", __func__, ctx->gir_status);
+	pr_info("%s: + ctx->gir_status = %d  \n", __func__, ctx->gir_status);
 
 	if (!panel) {
 		pr_err("%s: panel is NULL\n", __func__);
@@ -1742,7 +1741,7 @@ static int panel_set_gir_off(struct drm_panel *panel)
 	struct lcm *ctx;
 	int ret = -1;
 
-	pr_debug("%s: + ctx->gir_status = %d \n", __func__, ctx->gir_status);
+	pr_info("%s: + ctx->gir_status = %d \n", __func__, ctx->gir_status);
 
 	if (!panel) {
 		pr_err("%s: panel is NULL\n", __func__);
@@ -1795,7 +1794,7 @@ static void panel_set_crc_p3_flat(struct drm_panel *panel)
 	char  acm1_set3[] = {0xD5, 0x70};
 	struct lcm *ctx;
 
-	pr_debug("%s +\n", __func__);
+	pr_info("%s +\n", __func__);
 
 	if (!panel) {
 		pr_err("%s: panel is NULL\n", __func__);
@@ -1835,7 +1834,7 @@ static void panel_set_crc_off(struct drm_panel *panel)
 	char  acm1_set_off[] = {0x55, 0x00};
 	struct lcm *ctx;
 
-	pr_debug("%s +\n", __func__);
+	pr_info("%s +\n", __func__);
 
 	if (!panel) {
 		pr_err("%s: panel is NULL\n", __func__);
@@ -1856,6 +1855,66 @@ static void panel_set_crc_off(struct drm_panel *panel)
 		cmd_msg->tx_len[0] = ARRAY_SIZE(acm1_set_off);
 		mtk_ddic_dsi_send_cmd(cmd_msg, false, false);
 	}
+}
+#endif
+
+#ifdef CONFIG_FACTORY_BUILD
+static void panel_set_round_enable(struct drm_panel *panel, bool enable)
+{
+	struct lcm *ctx;
+	char round_switch1[] = {0xB0, 0x13};
+	char round_switch2[] = {0xB2, 0x13};
+
+	pr_info("%s: +\n", __func__);
+
+	if (!panel) {
+		pr_err("%s: panel is NULL\n", __func__);
+		goto err;
+	}
+
+	ctx = panel_to_lcm(panel);
+	if (!ctx->enabled) {
+		pr_err("%s: panel isn't enabled\n", __func__);
+	} else {
+		if (enable == true) {
+			round_switch1[1] = 0x13;
+			round_switch2[1] = 0x13;
+			lcm_dcs_write_seq_static(ctx, 0xF0, 0xAA, 0x18);
+			if (cmd_msg != NULL) {
+				cmd_msg->channel = 0;
+				cmd_msg->flags = MIPI_DSI_MSG_USE_LPM;
+				cmd_msg->tx_cmd_num = 1;
+				cmd_msg->type[0] = ARRAY_SIZE(round_switch1) > 2 ? 0x39 : 0x15;;
+				cmd_msg->tx_buf[0] = round_switch1;
+				cmd_msg->tx_len[0] = ARRAY_SIZE(round_switch1);
+				mtk_ddic_dsi_send_cmd(cmd_msg, false, false);
+				cmd_msg->type[0] = ARRAY_SIZE(round_switch2) > 2 ? 0x39 : 0x15;;
+				cmd_msg->tx_buf[0] = round_switch2;
+				cmd_msg->tx_len[0] = ARRAY_SIZE(round_switch2);
+				mtk_ddic_dsi_send_cmd(cmd_msg, false, false);
+			}
+		} else if (enable == false) {
+			round_switch1[1] = 0x00;
+			round_switch2[1] = 0x00;
+			lcm_dcs_write_seq_static(ctx, 0xF0, 0xAA, 0x18);
+			if (cmd_msg != NULL) {
+				cmd_msg->channel = 0;
+				cmd_msg->flags = MIPI_DSI_MSG_USE_LPM;
+				cmd_msg->tx_cmd_num = 1;
+				cmd_msg->type[0] = ARRAY_SIZE(round_switch1) > 2 ? 0x39 : 0x15;;
+				cmd_msg->tx_buf[0] = round_switch1;
+				cmd_msg->tx_len[0] = ARRAY_SIZE(round_switch1);
+				mtk_ddic_dsi_send_cmd(cmd_msg, false, false);
+				cmd_msg->type[0] = ARRAY_SIZE(round_switch2) > 2 ? 0x39 : 0x15;;
+				cmd_msg->tx_buf[0] = round_switch2;
+				cmd_msg->tx_len[0] = ARRAY_SIZE(round_switch2);
+				mtk_ddic_dsi_send_cmd(cmd_msg, false, false);
+			}
+		}
+	}
+
+err:
+	pr_info("%s: -\n", __func__);
 }
 #endif
 
@@ -1898,6 +1957,9 @@ static struct mtk_panel_funcs ext_funcs = {
 	.panel_set_crc_p3_flat = panel_set_crc_p3_flat,
 	.panel_set_crc_off = panel_set_crc_off,
 #endif
+#ifdef CONFIG_FACTORY_BUILD
+	.panel_set_round_enable = panel_set_round_enable,
+#endif
 };
 #endif
 
@@ -1922,14 +1984,11 @@ struct panel_desc {
 
 static int lcm_get_modes(struct drm_panel *panel)
 {
-#ifdef ENABLE_30HZ
 	struct drm_display_mode *mode_30;
-#endif
 	struct drm_display_mode *mode_60;
 	struct drm_display_mode *mode_90;
 	struct drm_display_mode *mode_120;
 
-#ifdef ENABLE_30HZ
 	mode_30 = drm_mode_duplicate(panel->drm, &mode_30hz);
 	if (!mode_30) {
 		dev_err(panel->drm->dev, "failed to add mode %ux%ux@%u\n",
@@ -1940,7 +1999,6 @@ static int lcm_get_modes(struct drm_panel *panel)
 	drm_mode_set_name(mode_30);
 	mode_30->type = DRM_MODE_TYPE_DRIVER;
 	drm_mode_probed_add(panel->connector, mode_30);
-#endif
 
 	mode_60 = drm_mode_duplicate(panel->drm, &mode_60hz);
 	if (!mode_60) {
@@ -2003,17 +2061,17 @@ static int lcm_probe(struct mipi_dsi_device *dsi)
 		if (endpoint) {
 			remote_node = of_graph_get_remote_port_parent(endpoint);
 			if (!remote_node) {
-				pr_debug("No panel connected,skip probe lcm\n");
+				pr_info("No panel connected,skip probe lcm\n");
 				return -ENODEV;
 			}
-			pr_debug("device node name:%s\n", remote_node->name);
+			pr_info("device node name:%s\n", remote_node->name);
 		}
 	}
 	if (remote_node != dev->of_node) {
-		pr_debug("%s+ skip probe due to not current lcm: %s\n", __func__, panel_name);
+		pr_info("%s+ skip probe due to not current lcm: %s\n", __func__, panel_name);
 		return -ENODEV;
 	}
-	pr_debug("%s+  probe current lcm: %s\n", __func__, panel_name);
+	pr_info("%s+  probe current lcm: %s\n", __func__, panel_name);
 
 	ctx = devm_kzalloc(dev, sizeof(struct lcm), GFP_KERNEL);
 	if (!ctx)
@@ -2062,12 +2120,8 @@ static int lcm_probe(struct mipi_dsi_device *dsi)
 	ext_params_60hz.err_flag_irq_gpio = of_get_named_gpio_flags(
 		dev->of_node, "mi,esd-err-irq-gpio",
 		0, (enum of_gpio_flags *)&(ext_params_60hz.err_flag_irq_flags));
-
-#ifdef ENABLE_30HZ
 	ext_params_30hz.err_flag_irq_gpio = ext_params_60hz.err_flag_irq_gpio;
 	ext_params_30hz.err_flag_irq_flags = ext_params_60hz.err_flag_irq_flags;
-#endif
-
 	ext_params_90hz.err_flag_irq_gpio = ext_params_60hz.err_flag_irq_gpio;
 	ext_params_90hz.err_flag_irq_flags = ext_params_60hz.err_flag_irq_flags;
 	ext_params_120hz.err_flag_irq_gpio = ext_params_60hz.err_flag_irq_gpio;
@@ -2096,7 +2150,7 @@ static int lcm_probe(struct mipi_dsi_device *dsi)
 	memset(cmd_msg, 0, sizeof(struct mtk_ddic_dsi_msg));
 	this_panel = &ctx->panel;
 
-	pr_debug("%s-\n", __func__);
+	pr_info("%s-\n", __func__);
 
 	return ret;
 }
