@@ -1195,7 +1195,7 @@ static int bq2589x_update_chg_type(struct charger_device *chg_dev, bool en)
 	if (en) {
 		if (first_connect) {
 			while (wait_cdp_cnt >= 0) {
-				if (is_usb_rdy()) {
+				if (is_usb_rdy(&chg_dev->dev)) {
 					pr_info("CDP, PASS\n");
 					break;
 				}
