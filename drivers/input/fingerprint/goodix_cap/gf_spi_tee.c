@@ -48,7 +48,7 @@
 #include <net/sock.h>
 #include <linux/spi/spi.h>
 #include <linux/spi/spidev.h>
-#define CONFIG_SPI_MT65XX_MODULE
+#define CONFIG_SPI_MT65XX_MODULE 
 /* MTK header */
 /*
 #ifndef CONFIG_SPI_MT65XX_MODULE
@@ -391,7 +391,7 @@ static void gf_hw_power_enable(struct gf_device *gf_dev, u8 onoff)
 	struct spi_device *spi;
 	spi = gf_dev->spi;
 	int status = -EINVAL;
-	pr_debug("%s\n", __func__);
+	pr_err("%s\n", __func__);
 	buck = regulator_get(&spi->dev, "vfp");
 
 	if (buck == NULL) {
@@ -451,7 +451,7 @@ static void gf_spi_clk_enable(struct gf_device *gf_dev, u8 bonoff)
 {
 	if (bonoff) {
 		if (atomic_read(&clk_ref) == 0) {
-			pr_debug("%s : ree control spi clk, enable spi clk\n",
+			pr_err("%s : ree control spi clk, enable spi clk\n",
 			       __func__);
 			mt_spi_enable_master_clk(gf_dev->spi);
 		}
@@ -463,7 +463,7 @@ static void gf_spi_clk_enable(struct gf_device *gf_dev, u8 bonoff)
 		gf_debug(DEBUG_LOG, "%s : decrease spi clk ref to %d\n",
 			 __func__, atomic_read(&clk_ref));
 		if (atomic_read(&clk_ref) == 0) {
-			pr_debug("%s :ree control spi clk, disable spi clk\n",
+			pr_err("%s :ree control spi clk, disable spi clk\n",
 			       __func__);
 			mt_spi_disable_master_clk(gf_dev->spi);
 		}
@@ -854,8 +854,10 @@ static irqreturn_t gf_irq(int irq, void *handle)
 static long gf_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 {
 	struct gf_device *gf_dev = NULL;
+	struct gf_key gf_key;
 	gf_nav_event_t nav_event = GF_NAV_NONE;
 	uint32_t nav_input = 0;
+	uint32_t key_input = 0;
 #ifdef SUPPORT_REE_SPI
 #ifdef SUPPORT_REE_OSWEGO
 	struct gf_ioc_transfer ioc;
@@ -988,7 +990,7 @@ static long gf_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		break;
 
 	case GF_IOC_RESET:
-		gf_debug(DEBUG_LOG, "%s: chip reset command\n", __func__);
+		printk("%s: chip reset command\n", __func__);
 		gf_hw_reset(gf_dev, 60);
 		break;
 
@@ -1003,12 +1005,12 @@ static long gf_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		break;
 
 	case GF_IOC_ENABLE_SPI_CLK:
-		gf_debug(DEBUG_LOG, "%s: GF_IOC_ENABLE_SPI_CLK ======\n", __func__);
+		printk("%s: GF_IOC_ENABLE_SPI_CLK ======\n", __func__);
 		gf_spi_clk_enable(gf_dev, 1);
 		break;
 
 	case GF_IOC_DISABLE_SPI_CLK:
-		gf_debug(DEBUG_LOG, "%s: GF_IOC_DISABLE_SPI_CLK ======\n", __func__);
+		printk("%s: GF_IOC_DISABLE_SPI_CLK ======\n", __func__);
 		gf_spi_clk_enable(gf_dev, 0);
 		break;
 
@@ -1022,6 +1024,48 @@ static long gf_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		gf_debug(INFO_LOG, "%s: GF_IOC_DISABLE_POWER ======\n",
 			 __func__);
 		gf_hw_power_enable(gf_dev, 0);
+		break;
+
+	case GF_IOC_INPUT_KEY_EVENT:
+		if (copy_from_user
+		    (&gf_key, (struct gf_key *)arg, sizeof(struct gf_key))) {
+			gf_debug(ERR_LOG,
+				 "Failed to copy input key event from user to kernel\n");
+			retval = -EFAULT;
+			break;
+		}
+
+		if (GF_KEY_HOME == gf_key.key) {
+			key_input = GF_KEY_INPUT_HOME;
+		} else if(GF_KEY_HOME_DOUBLE_CLICK == gf_key.key){
+			key_input = GF_KEY_DOUBLE_CLICK;
+		} else if (GF_KEY_POWER == gf_key.key) {
+			key_input = GF_KEY_INPUT_HOME;
+		} else if (GF_KEY_CAMERA == gf_key.key) {
+			key_input = GF_KEY_INPUT_CAMERA;
+		} else {
+			/* add special key define */
+			key_input = gf_key.key;
+		}
+		gf_debug(INFO_LOG,
+			 "%s: received key event[%d], key=%d, value=%d\n",
+			 __func__, key_input, gf_key.key, gf_key.value);
+
+		if ((GF_KEY_POWER == gf_key.key || GF_KEY_CAMERA == gf_key.key)
+		    && (gf_key.value == 1)) {
+			input_report_key(gf_dev->input, key_input, 1);
+			input_sync(gf_dev->input);
+			input_report_key(gf_dev->input, key_input, 0);
+			input_sync(gf_dev->input);
+		}
+
+		if (GF_KEY_HOME == gf_key.key || GF_KEY_HOME_DOUBLE_CLICK == gf_key.key) {
+			gf_debug (INFO_LOG, "input report key event single or double click");
+			input_report_key(gf_dev->input, key_input,
+					 gf_key.value);
+			input_sync(gf_dev->input);
+		}
+
 		break;
 
 	case GF_IOC_NAV_EVENT:
@@ -1436,7 +1480,7 @@ static ssize_t gf_debug_store(struct device *dev,
 			 "%s: parameter is -13, Vendor ID test --> 0x%x\n",
 			 __func__, g_vendor_id);
 		gf_spi_read_bytes(gf_dev, 0x0000, 4, rx_test);
-		gf_debug(DEBUG_LOG, "%s rx_test chip id:0x%x 0x%x 0x%x 0x%x \n", __func__,
+		printk("%s rx_test chip id:0x%x 0x%x 0x%x 0x%x \n", __func__,
 		       rx_test[0], rx_test[1], rx_test[2], rx_test[3]);
 	} else {
 		gf_debug(ERR_LOG, "%s: wrong parameter!===============\n",
@@ -2223,7 +2267,7 @@ static int gf_probe(struct spi_device *spi)
 	gf_debug(ERR_LOG, "%s, regulator_value %d!!\n", __func__,status);
 
 	/* get gpio info from dts or defination */
-	// gf_debug(DEBUG_LOG, "goodix goto test switch miso pin mode\n");
+	// printk("goodix goto test switch miso pin mode\n");
 
 	gf_get_gpio_dts_info(gf_dev);
 
@@ -2241,14 +2285,14 @@ static int gf_probe(struct spi_device *spi)
 	//pinctrl_select_state(gf_dev->pinctrl_gpios, gf_dev->pins_miso_spi);
 
 	/*enable the power */
-	pr_debug("%s %d now get dts info done!", __func__, __LINE__);
+	pr_err("%s %d now get dts info done!", __func__, __LINE__);
 	gf_hw_power_enable(gf_dev, 1);
 	gf_bypass_flash_gpio_cfg();
 
-	pr_debug("%s %d now enable spi clk API", __func__, __LINE__);
+	pr_err("%s %d now enable spi clk API", __func__, __LINE__);
 	gf_spi_clk_enable(gf_dev, 1);
 
-	pr_debug("%s %d now enable spi clk Done", __func__, __LINE__);
+	pr_err("%s %d now enable spi clk Done", __func__, __LINE__);
 
 	/* init freq ppm data */
 
@@ -2410,15 +2454,23 @@ static int gf_probe(struct spi_device *spi)
 	}
 
 	__set_bit(EV_KEY, gf_dev->input->evbit);
+	__set_bit(GF_KEY_INPUT_HOME, gf_dev->input->keybit);
 
+	__set_bit(GF_KEY_INPUT_MENU, gf_dev->input->keybit);
+	__set_bit(GF_KEY_INPUT_BACK, gf_dev->input->keybit);
+	__set_bit(GF_KEY_INPUT_POWER, gf_dev->input->keybit);
+	__set_bit(GF_KEY_DOUBLE_CLICK, gf_dev->input->keybit);
+ 
 	__set_bit(GF_NAV_INPUT_UP, gf_dev->input->keybit);
 	__set_bit(GF_NAV_INPUT_DOWN, gf_dev->input->keybit);
 	__set_bit(GF_NAV_INPUT_RIGHT, gf_dev->input->keybit);
 	__set_bit(GF_NAV_INPUT_LEFT, gf_dev->input->keybit);
+	__set_bit(GF_KEY_INPUT_CAMERA, gf_dev->input->keybit);
 	__set_bit(GF_NAV_INPUT_CLICK, gf_dev->input->keybit);
 	__set_bit(GF_NAV_INPUT_DOUBLE_CLICK, gf_dev->input->keybit);
 	__set_bit(GF_NAV_INPUT_LONG_PRESS, gf_dev->input->keybit);
 	__set_bit(GF_NAV_INPUT_HEAVY, gf_dev->input->keybit);
+	//__set_bit(GF_KEY_INPUT_KPENTER, gf_dev->input->keybit);
 
 	gf_dev->input->name = GF_INPUT_NAME;
 	gf_dev->input->id.vendor = 0x0666;
@@ -2447,7 +2499,7 @@ static int gf_probe(struct spi_device *spi)
 	gf_dev->probe_finish = 1;
 	gf_dev->is_sleep_mode = 0;
 	gf_debug(INFO_LOG, "%s probe finished\n", __func__);
-	pr_debug("%s %d now disable spi clk API", __func__, __LINE__);
+	pr_err("%s %d now disable spi clk API", __func__, __LINE__);
 	gf_spi_clk_enable(gf_dev, 0);
 
 	gf_debug(ERR_LOG, "[gf][goodix_test] %s, probe success\n", __func__);
@@ -2580,7 +2632,7 @@ static int __init gf_init(void)
 	int status = 0;
 
 	FUNC_ENTRY();
-	pr_debug("%s %d\n", __func__, __LINE__);
+	pr_err("%s %d\n", __func__, __LINE__);
 	/*
 	   if (fpc1022_fp_exist) {
 	   pr_err("%s FPC sensor has been detected, so exit Goodxi sensor detect.\n",__func__);

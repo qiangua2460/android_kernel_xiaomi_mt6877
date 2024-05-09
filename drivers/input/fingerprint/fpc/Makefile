@@ -18,3 +18,4 @@ subdir-ccflags-y += -I$(srctree)/drivers/tee/teei/400/common/include/
 
 #obj-$(CONFIG_FPC_FINGERPRINT) := fpc1022_tee.o
 obj-y := fpc1022_tee.o
+
