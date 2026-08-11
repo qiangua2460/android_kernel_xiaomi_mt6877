@@ -147,4 +147,8 @@ static inline bool susfs_is_current_proc_umounted_app(void) {
 		unlikely(test_bit(AS_FLAGS_OPEN_REDIRECT, &inode->i_state)) && \
 		susfs_is_current_proc_umounted_app()
 
+/* string helpers implemented in fs/susfs.c */
+bool susfs_starts_with(const char *str, const char *prefix);
+bool susfs_ends_with(const char *str, const char *suffix);
+
 #endif // #ifndef KSU_SUSFS_DEF_H

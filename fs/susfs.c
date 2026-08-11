@@ -43,6 +43,24 @@ bool susfs_starts_with(const char *str, const char *prefix) {
     return true;
 }
 
+bool susfs_ends_with(const char *str, const char *suffix) {
+    const char *p, *q;
+    size_t suf_len = 0;
+    for (p = suffix; *p; p++)
+        suf_len++;
+    if (suf_len == 0)
+        return true;
+    for (p = str; *p; p++)
+        ;
+    if ((size_t)(p - str) < suf_len)
+        return false;
+    for (p = str + (p - str) - suf_len, q = suffix; *q; p++, q++) {
+        if (*p != *q)
+            return false;
+    }
+    return true;
+}
+
 #ifndef FUSE_SUPER_MAGIC
 #define FUSE_SUPER_MAGIC 0x65735546
 #endif
@@ -1472,7 +1490,16 @@ void susfs_start_sdcard_monitor_fn(void) {
 }
 
 /* susfs_init */
+static void susfs_extra_works_fn(struct work_struct *work)
+{
+	/* placeholder for extra susfs work; intentionally a no-op for now */
+}
+
+struct work_struct susfs_extra_works;
+
 void susfs_init(void) {
+	INIT_WORK(&susfs_extra_works, susfs_extra_works_fn);
+
 #ifdef CONFIG_KSU_SUSFS_SPOOF_UNAME
 	susfs_my_uname_init();
 #endif
