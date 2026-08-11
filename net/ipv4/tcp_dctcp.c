@@ -44,6 +44,7 @@
 #include <linux/mm.h>
 #include <net/tcp.h>
 #include <linux/inet_diag.h>
+#include "tcp_dctcp.h"
 
 #define DCTCP_MAX_ALPHA	1024U
 
