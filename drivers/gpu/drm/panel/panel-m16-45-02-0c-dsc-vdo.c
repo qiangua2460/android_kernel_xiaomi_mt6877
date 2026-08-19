@@ -100,7 +100,10 @@ static int range_bpg_ofs[15] = {2, 0, 0, -2, -4, -6, -8, -8, -8, -10, -10, -12, 
 #define GIR_CRC_INDEX 63
 #define AOD_TO_NORMAL_FPS_INDEX 0
 
-#define pr_fmt(fmt)	"panel_45_02_0c:" fmt
+#undef pr_fmt
+#ifndef pr_fmt
+#define pr_fmt(fmt)     "panel_45_02_0c:" fmt
+#endif
 
 static const char *panel_name = "panel_name=dsi_m16_45_02_0c_dsc_vdo";
 static char oled_wp_cmdline[18] = {0};
@@ -181,41 +184,6 @@ static void lcm_dcs_write(struct lcm *ctx, const void *data, size_t len)
 		dev_err(ctx->dev, "error %zd writing seq: %ph\n", ret, data);
 		ctx->error = ret;
 	}
-}
-
-static void mi_disp_panel_ddic_send_cmd(struct LCM_setting_table *table, unsigned int count)
-{
-	int i = 0, j = 0, ret = 0;
-	struct mtk_ddic_dsi_msg cmd_msg = {
-		.channel = 0,
-		.flags = 0,
-		.tx_cmd_num = count,
-	};
-
-	if (table == NULL) {
-		pr_err("invalid ddic cmd \n");
-		return;
-	}
-
-	if (count == 0 || count > 25) {
-		pr_err("cmd count invalid, value:%d \n", count);
-		return;
-	}
-
-	for (i = 0;i < count; i++) {
-		cmd_msg.type[i] = table[i].count > 2 ? 0x39 : 0x15;
-		cmd_msg.tx_buf[i] = table[i].para_list;
-		cmd_msg.tx_len[i] = table[i].count;
-		pr_debug("cmd count:%d, cmd_add:%x len:%d\n",count,table[i].cmd,table[i].count);
-		for (j = 0;j < table[i].count; j++)
-			pr_debug("0x%02hhx ",table[i].para_list[j]);
-	}
-
-	ret = mtk_ddic_dsi_send_cmd(&cmd_msg, true, false);
-	if (ret != 0) {
-		pr_err("%s: failed to send ddic cmd\n", __func__);
-	}
-	return;
 }
 
 static struct regulator *disp_vibr30;
@@ -571,7 +539,6 @@ static int lcm_unprepare(struct drm_panel *panel)
 static int panel_power_on(struct drm_panel *panel)
 {
 	struct lcm *ctx = panel_to_lcm(panel);
-	int ret;
 
 	pr_debug("%s\n", __func__);
 	if (ctx->prepared)
