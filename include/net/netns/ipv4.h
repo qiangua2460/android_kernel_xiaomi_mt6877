@@ -66,7 +66,7 @@ struct netns_ipv4 {
 	struct hlist_head	*fib_table_hash;
 	bool			fib_offload_disabled;
 	struct sock		*fibnl;
-
+	int sysctl_tcp_plb_enabled;
 	struct sock  * __percpu	*icmp_sk;
 	struct sock		*mc_autojoin_sk;
 
